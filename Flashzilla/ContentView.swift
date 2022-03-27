@@ -35,6 +35,36 @@ struct TapGestureView: View {
                 print("VStack tapped")
             }
 
+            // Disabling user interactivity with allowsHitTesting() or contentShape()
+            ZStack {
+                Rectangle()
+                    .fill(.blue)
+                    .frame(width: 300, height: 300)
+                    .onTapGesture {
+                        print("Rectangle tapped!")
+                    }
+
+                Circle()
+                    .fill(.red)
+                    .frame(width: 300, height: 300)
+                    .contentShape(Rectangle()) //make the tappable shize as rectangle // comment out allowsHitTesting
+                    .onTapGesture {
+                        print("Circle tapped")
+                    }
+//                    .allowsHitTesting(false) // not catch any taps
+            }
+
+            // by default SwiftUI won’t trigger actions when a stack spacer is tapped
+            VStack {
+                Text("Hello")
+                Spacer().frame(height: 100)
+                Text("World")
+            }
+            .contentShape(Rectangle()) //make the vstack tappable
+            .onTapGesture {
+                print("Vstack tapped")
+            }
+
         }
     }
 }
