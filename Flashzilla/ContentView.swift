@@ -4,217 +4,113 @@
 //
 //  Created by July on 3/18/22.
 //
-
+/**
+ Core Haptics lets us create hugely customizable haptics by combining taps, continuous vibrations, parameter curves, and more
+ */
 import SwiftUI
-
-struct TapGestureView: View {
-    var body: some View {
-        VStack {
-            Text("Tap Gesture")
-                .padding()
-                .onTapGesture(count: 2) {
-                    print("Double Tapped")
-                }
-
-            Text("Long Press Gesture")
-                .padding()
-                .onLongPressGesture(minimumDuration: 1) {
-                    print("Long Pressed")
-                } onPressingChanged: { inProgress in
-                    print("In progress: \(inProgress)!")
-                }// the boolean value changed before long pressed triggered
-
-            VStack {
-                Text("Child View Tap Gesture")
-                    .padding()
-                    .onTapGesture {
-                        print("Text tapped") //child view gets priority
-                    }
-            }
-            .onTapGesture {
-                print("VStack tapped")
-            }
-
-            // Disabling user interactivity with allowsHitTesting() or contentShape()
-            ZStack {
-                Rectangle()
-                    .fill(.blue)
-                    .frame(width: 300, height: 300)
-                    .onTapGesture {
-                        print("Rectangle tapped!")
-                    }
-
-                Circle()
-                    .fill(.red)
-                    .frame(width: 300, height: 300)
-                    .contentShape(Rectangle()) //make the tappable shize as rectangle // comment out allowsHitTesting
-                    .onTapGesture {
-                        print("Circle tapped")
-                    }
-//                    .allowsHitTesting(false) // not catch any taps
-            }
-
-            // by default SwiftUI won’t trigger actions when a stack spacer is tapped
-            VStack {
-                Text("Hello")
-                Spacer().frame(height: 100)
-                Text("World")
-            }
-            .contentShape(Rectangle()) //make the vstack tappable
-            .onTapGesture {
-                print("Vstack tapped")
-            }
-
-        }
-    }
-}
-struct MagnigicationView: View {
-    @State private var currentAmount = 0.0
-    @State private var finalAmount = 1.0
-
-    var body: some View {
-        Text("Magnigication Gesture; press option at simulator to pinch")
-            .font(.headline)
-            .padding()
-            .scaleEffect(finalAmount + currentAmount)
-            .gesture(
-                MagnificationGesture()
-                    .onChanged { amount in
-                        currentAmount = amount - 1
-                    }
-                    .onEnded { amount in
-                        finalAmount += currentAmount
-                        currentAmount = 0
-                    }
-            )
-    }
-}
-
-struct RotationGestureView : View {
-    @State private var currentAngle = Angle.zero
-    @State private var finalAngle = Angle.zero
-
-    var body: some View {
-        Text("Rotation Gesture; press option at simulator to pinch")
-            .font(.headline)
-            .padding()
-            .rotationEffect(currentAngle + finalAngle)
-            .gesture(
-                RotationGesture()
-                    .onChanged { angle in
-                        currentAngle = angle
-                    }
-                    .onEnded { angle in
-                        finalAngle += currentAngle
-                        currentAngle = .zero
-                    }
-            )
-    }
-}
-
-struct ClashGestureView: View {
-    var body: some View {
-        HStack {
-            VStack {
-                Text("highPriorityGesture")
-                    .onTapGesture {
-                        print("Text tapped")
-                    }
-            }
-            .highPriorityGesture(
-                TapGesture()
-                    .onEnded { _ in
-                        print("VStack tapped")
-                    }
-            )
-
-            Spacer()
-
-            VStack {
-                Text("simultaneousGesture")
-                    .onTapGesture {
-                        print("Text tapped")
-                    }
-            }
-            .simultaneousGesture(
-                TapGesture()
-                    .onEnded { _ in
-                        print("VStack tapped")
-                    }
-            )
-        }
-        .padding()
-    }
-}
-
-struct GestureSequenceView: View {
-    // how far the circle has been dragged
-    @State private var offset = CGSize.zero
-
-    // whether it is currently being dragged or not
-    @State private var isDragging = false
-
-    var body: some View {
-        // a drag gesture that updates offset and isDragging as it moves around
-        let dragGesture = DragGesture()
-            .onChanged { value in
-                offset = value.translation
-            }
-            .onEnded { _ in
-                withAnimation {
-                    offset = .zero
-                    isDragging = false
-                }
-            }
-
-        // a long press gesture that enables isDragging
-        let pressGesture = LongPressGesture()
-            .onEnded { value in
-                withAnimation {
-                    isDragging = true
-                }
-            }
-
-        // a combined gesture that forces the user to long press then drag
-        let combined = pressGesture.sequenced(before: dragGesture)
-
-        // a 64x64 circle that scales up when it's dragged, sets its offset to whatever we had back from the drag gesture, and uses our combined gesture
-        Circle()
-            .fill(.orange)
-            .frame(width: 64, height: 64)
-            .scaleEffect(isDragging ? 1.5 : 1)
-            .offset(offset)
-            .gesture(combined)
-    }
-}
+import CoreHaptics
 
 struct ContentView: View {
+    @State private var engine: CHHapticEngine?
     var body: some View {
-        TabView {
-            TapGestureView()
-                .tabItem {
-                    Label("tap", systemImage: "star")
-                }
+        VStack {
+            Text("sucess haptic")
+                .padding()
+                .onTapGesture(perform: simpleSuccess)
 
-            MagnigicationView()
-                .tabItem {
-                    Label("Mag", systemImage: "cloud")
-                }
+            Text("error haptic")
+                .padding()
+                .onTapGesture(perform: simpleError)
 
-            RotationGestureView()
-                .tabItem {
-                    Label("Rotate", systemImage: "circle")
-                }
+            Text("warning haptic")
+                .padding()
+                .onTapGesture(perform: simpleSuccess)
 
-            ClashGestureView()
-                .tabItem {
-                    Label("Clash", systemImage: "wind")
-                }
+            Text("dull core haptic")
+                .padding()
+//                .onAppear(perform: prepareHaptics)
+                .onTapGesture(perform: dullCoreHaptics)
 
-            GestureSequenceView()
-                .tabItem {
-                    Label("Sequence", systemImage: "sunset")
-                }
+            Text("Custom core haptic")
+                .padding()
+                .onTapGesture(perform: customCoreHaptics)
+        }
+        .onAppear(perform: prepareHaptics)
+
+    }
+
+    // UINotificationFeedbackGenerator
+    func simpleSuccess() {
+        let generator = UINotificationFeedbackGenerator()
+        // Try replacing .success with .error or .warning to see the difference
+        generator.notificationOccurred(.success)
+    }
+
+    func simpleError() {
+        let generator = UINotificationFeedbackGenerator()
+        generator.notificationOccurred(.error)
+    }
+
+    func simpleWarning() {
+        let generator = UINotificationFeedbackGenerator()
+        generator.notificationOccurred(.warning)
+    }
+
+
+    //core haptics
+    func prepareHaptics() {
+        guard CHHapticEngine.capabilitiesForHardware().supportsHaptics else { return }
+
+        do {
+            engine = try CHHapticEngine()
+            try engine?.start()
+        } catch {
+            print("There was an error creating the engine: \(error.localizedDescription)")
+        }
+    }
+
+    func dullCoreHaptics() {
+        guard CHHapticEngine.capabilitiesForHardware().supportsHaptics else { return }
+        var events = [CHHapticEvent]()
+
+        let intensity = CHHapticEventParameter(parameterID: .hapticIntensity, value: 1)
+        let sharpness = CHHapticEventParameter(parameterID: .hapticSharpness, value: 1)
+        let event = CHHapticEvent(eventType: .hapticTransient, parameters: [intensity, sharpness], relativeTime: 0)
+        events.append(event)
+
+        do {
+            let pattern = try CHHapticPattern(events: events, parameters: [])
+            let player = try engine?.makePlayer(with: pattern)
+            try player?.start(atTime: 0)
+        } catch {
+            print("Failed to play pattern: \(error.localizedDescription).")
+        }
+    }
+
+    func customCoreHaptics() {
+        guard CHHapticEngine.capabilitiesForHardware().supportsHaptics else { return }
+        var events = [CHHapticEvent]()
+
+        for i in stride(from: 0, to: 1, by: 0.1) {
+            let intensity = CHHapticEventParameter(parameterID: .hapticIntensity, value: Float(i))
+            let sharpness = CHHapticEventParameter(parameterID: .hapticSharpness, value: Float(i))
+            let event = CHHapticEvent(eventType: .hapticTransient, parameters: [intensity, sharpness], relativeTime: i)
+            events.append(event)
+        }
+
+        for i in stride(from: 0, to: 1, by: 0.1) {
+            let intensity = CHHapticEventParameter(parameterID: .hapticIntensity, value: Float(1 - i))
+            let sharpness = CHHapticEventParameter(parameterID: .hapticSharpness, value: Float(1 - i))
+            let event = CHHapticEvent(eventType: .hapticTransient, parameters: [intensity, sharpness], relativeTime: 1 + i)
+            events.append(event)
+        }
+
+        do {
+            let pattern = try CHHapticPattern(events: events, parameters: [])
+            let player = try engine?.makePlayer(with: pattern)
+            try player?.start(atTime: 0)
+        } catch {
+            print("Failed to play pattern: \(error.localizedDescription).")
         }
     }
 }
