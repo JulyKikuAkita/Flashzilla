@@ -5,46 +5,77 @@
 //  Created by July on 3/18/22.
 //
 /**
- Core Haptics lets us create hugely customizable haptics by combining taps, continuous vibrations, parameter curves, and more
+ Test in the simulator: going to the Settings app and choosing
+ 1. When this setting is enabled, apps should try to make their UI clearer using shapes, icons, and textures rather than colors, which is helpful for the 1 in 12 men who have color blindness
+ Accessibility > Display & Text Size > Differentiate Without Color
+
+ 2. When this is enabled, apps should limit the amount of animation that causes movement on screen. For example, the iOS app switcher makes views fade in and out rather than scale up and down.
+ Accessibility > Motion > Reduce Motion
+
+ 3. Reduce Transparency, and when that’s enabled apps should reduce the amount of blur and translucency used in their designs to make doubly sure everything is clear.
+
  */
 import SwiftUI
 
 struct ContentView: View {
-    // (Run loops lets iOS handle running code while the user is actively doing something, such as scrolling in a list.)
-    // timer coalescing: it can push back your timer just a little so that it fires at the same time as one or more other timers, which means it can keep the CPU idling more and save battery power.
-    let timer = Timer.publish(every: 1, tolerance: 0.5, on: .main, in: .common).autoconnect()
-    @State private var counter = 0
 
-    @Environment(\.scenePhase) var scenePhase
+    @Environment(\.accessibilityDifferentiateWithoutColor) var differentiateWithoutColor
+    @Environment(\.accessibilityReduceMotion) var reduceMotion
+    @State private var scale = 1.0
+
+    @Environment(\.accessibilityReduceTransparency) var reduceTransparency
+
     var body: some View {
         VStack {
-            Text("Publish timer")
+            // we use a simple green background for the regular layout, but when Differentiate Without Color is enabled we use a black background and add a checkmark instead
+            HStack {
+                if differentiateWithoutColor {
+                    Image(systemName: "checkmark.circle")
+                }
+                Text("Differentiate Without Color")
+            }
+            .padding()
+            .background(differentiateWithoutColor ? .black : .green)
+            .foregroundColor(.white)
+            .clipShape(Capsule())
+
+            // restrict the use of withAnimation() when it involves movement
+            Text("Reduce Motion")
                 .padding()
-                .onReceive(timer) { time in
-                    if counter == 5 {
-                        timer.upstream.connect().cancel()
+                .scaleEffect(scale)
+                .onTapGesture {
+                    if reduceMotion {
+                        scale *= 1.5
                     } else {
-                        print("The time is now \(time)")
+                        withAnimation {
+                            scale *= 1.5
+                        }
                     }
-                    counter += 1
                 }
 
-            /**
-             Active scenes are running right now, which on iOS means they are visible to the user. On macOS an app’s window might be wholly hidden by another app’s window, but that’s okay – it’s still considered to be active.
-             Inactive scenes are running and might be visible to the user, but they user isn’t able to access them. For example, if you’re swiping down to partially reveal the control center then the app underneath is considered inactive.
-             Background scenes are not visible to the user, which on iOS means they might be terminated at some point in the future.
-             */
-            Text("Show scenePhase")
+            Text("Reduce Motion with less code")
                 .padding()
-                .onChange(of: scenePhase) { newPhase in
-                    if newPhase == .active {
-                        print("Active")
-                    } else if newPhase == .inactive {
-                        print("Inactive")
-                    } else if newPhase == .background {
-                        print("Background")
+                .scaleEffect(scale)
+                .onTapGesture {
+                    withOptionalAnimation {
+                        scale *= 1.5
                     }
                 }
+
+            // this code uses a solid black background when Reduce Transparency is enabled, otherwise using 50% transparency
+            Text("Reduce Transparency")
+                .padding()
+                .background(reduceTransparency ? .black : .black.opacity(0.5))
+                .foregroundColor(.white)
+                .clipShape(Capsule())
+        }
+    }
+
+    func withOptionalAnimation<Result>(_ animation: Animation? = .default, _ body: () throws -> Result) rethrows -> Result {
+        if UIAccessibility.isReduceMotionEnabled {
+            return try body()
+        } else {
+            return try withAnimation(animation, body)
         }
     }
 }
