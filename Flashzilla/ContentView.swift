@@ -7,14 +7,39 @@
 
 import SwiftUI
 
+struct checkMarkCircleatBottomView: View {
+    var body: some View {
+        HStack {
+            Image(systemName: "xmark.circle")
+                .padding()
+                .background(.black.opacity(0.7))
+                .clipShape(Circle())
+            Spacer()
+            Image(systemName: "checkmark.circle")
+                .padding()
+                .background(.black.opacity(0.7))
+                .clipShape(Circle())
+        }
+        .foregroundColor(.white)
+        .font(.largeTitle)
+        .padding()
+    }
+}
 struct ContentView: View {
     @State private var cards = [Card](repeating: Card.example, count: 10)
+    @Environment(\.accessibilityDifferentiateWithoutColor) var differentiateWithoutColor
+
     var body: some View {
         ZStack {
             Image("background")
                 .resizable()
                 .ignoresSafeArea()
             VStack {
+                if differentiateWithoutColor {
+                    Spacer()
+                    checkMarkCircleatBottomView()
+                }
+
                 ZStack {
                     ForEach(0 ..< cards.count, id: \.self) { index in
                         CardView(card: cards[index]) {
