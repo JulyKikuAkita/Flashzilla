@@ -5,6 +5,14 @@
 //  Created by Ifang Lee on 4/2/22.
 //
 
+/**
+ About prepare() UINotificationFeedbackGenerator
+ First, it’s OK to call prepare() then never triggering the effect – the system will keep the Taptic Engine ready for a few seconds then just power it down again. If you repeatedly call prepare() and never trigger it the system might start ignoring your prepare() calls until at least one effect has happened.
+
+ Second, it’s perfectly allowable to call prepare() many times before triggering it once – prepare() doesn’t pause your app while the Taptic Engine warms up, and also doesn’t have any real performance cost when the system is already prepared.
+
+
+ */
 import SwiftUI
 
 struct CardView: View {
@@ -12,6 +20,7 @@ struct CardView: View {
     var removal: (() -> Void)? = nil //for content view callback
     @State private var isShowingAnswer = false
     @State private var offset = CGSize.zero
+    @State private var feedback = UINotificationFeedbackGenerator() // if add this to content view, there's not time to call prepare()
     @Environment(\.accessibilityDifferentiateWithoutColor) var differentiateWithoutColor
 
     var body: some View {
@@ -53,9 +62,15 @@ struct CardView: View {
             DragGesture()
                 .onChanged { gesture in
                     offset = gesture.translation //get car moving distance
+                    feedback.prepare()
                 }
                 .onEnded { _ in
                     if abs(offset.width) > 100 {
+                        if offset.width > 0 {
+                            feedback.notificationOccurred(.success) //thought? do we need this? drawbacks for too many haptics
+                        } else {
+                            feedback.notificationOccurred(.error)
+                        }
                         removal?() //That question mark in there means the closure will only be called if it has been set.
                     } else {
                         offset = .zero
