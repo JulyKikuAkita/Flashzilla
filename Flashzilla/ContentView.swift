@@ -45,6 +45,29 @@ struct checkMarkCircleatBottomView: View {
     }
 }
 
+struct EditCardView: View {
+    @Binding var showingEditScreen: Bool  //pass parent state var to child view
+    var body: some View {
+        VStack {
+            HStack {
+                Spacer()
+                
+                Button {
+                    showingEditScreen = true
+                } label: {
+                    Image(systemName: "plus.circle")
+                        .padding()
+                        .background(.black.opacity(0.7))
+                        .clipShape(Circle())
+                }
+            }
+            Spacer()
+        }
+        .foregroundColor(.white)
+        .font(.largeTitle)
+        .padding()
+    }
+}
 
 /*
  Issues for voice over regarding gestures
@@ -58,6 +81,8 @@ struct ContentView: View {
     @State private var cards = [Card](repeating: Card.example, count: 10)
     @State private var timeRemaining = 100
     @State private var isActive = true
+    @State private var showingEditScreen = false
+
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     @Environment(\.accessibilityDifferentiateWithoutColor) var differentiateWithoutColor
     @Environment(\.accessibilityVoiceOverEnabled) var voiceOverEnabled
@@ -69,6 +94,7 @@ struct ContentView: View {
                 .resizable()
                 .ignoresSafeArea()
             VStack {
+                EditCardView(showingEditScreen: $showingEditScreen)
                 if differentiateWithoutColor || voiceOverEnabled {
                     Spacer()
                     checkMarkCircleatBottomView { removeCard(at: cards.count - 1) }

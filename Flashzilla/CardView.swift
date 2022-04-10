@@ -18,7 +18,7 @@ struct CardView: View {
     var removal: (() -> Void)? = nil //for content view callback
     @State private var isShowingAnswer = false
     @State private var offset = CGSize.zero
-    @State private var feedback = UINotificationFeedbackGenerator() // if add this to content view, there's not time to call prepare()
+    @State private var feedback = UINotificationFeedbackGenerator() // if add this to content view, there's not time to call prepare()    
     @Environment(\.accessibilityDifferentiateWithoutColor) var differentiateWithoutColor
     @Environment(\.accessibilityVoiceOverEnabled) var voiceOverEnabled
     var body: some View {
