@@ -78,7 +78,7 @@ struct EditCardView: View {
  
  */
 struct ContentView: View {
-    @State private var cards = [Card](repeating: Card.example, count: 10)
+    @State private var cards =  [Card]() // [Card](repeating: Card.example, count: 10) // if need examples
     @State private var timeRemaining = 100
     @State private var isActive = true
     @State private var showingEditScreen = false
@@ -147,8 +147,17 @@ struct ContentView: View {
             }
 
         }
+        .onAppear(perform: resetCards)
+        //rather than creating a closure that calls the EditCards initializer,
+        // we can actually pass the EditCards initializer directly to the sheet, like this:
+        //.sheet(isPresented: $showingEditScreen, onDismiss: resetCards, content: EditCards.init)
+        // Important: This approach only works because EditCards has an initializer that accepts no parameters.
+        // If you need to pass in specific values you need to use the closure-based approach instead.
+        .sheet(isPresented: $showingEditScreen, onDismiss: resetCards) {
+            EditCards() // syntactic sugar: actually calling EditCards.init()
+        }
     }
-
+        
     func removeCard(at index: Int) {
         guard index >= 0 else { return }
         cards.remove(at: index)
@@ -158,9 +167,18 @@ struct ContentView: View {
     }
 
     func resetCards() {
-        cards = [Card](repeating: Card.example, count: 10)
+//        cards = [Card](repeating: Card.example, count: 10) //if need examples
         timeRemaining = 100
         isActive = true
+        loadData()
+    }
+    
+    func loadData() {
+        if let data = UserDefaults.standard.data(forKey: "Cards") {
+            if let decoded = try? JSONDecoder().decode([Card].self, from: data) {
+                cards = decoded
+            }
+        }
     }
 }
 
