@@ -5,13 +5,11 @@
 //  Created by Ifang Lee on 4/2/22.
 //
 
-/**
+/*
  About prepare() UINotificationFeedbackGenerator
  First, it’s OK to call prepare() then never triggering the effect – the system will keep the Taptic Engine ready for a few seconds then just power it down again. If you repeatedly call prepare() and never trigger it the system might start ignoring your prepare() calls until at least one effect has happened.
 
  Second, it’s perfectly allowable to call prepare() many times before triggering it once – prepare() doesn’t pause your app while the Taptic Engine warms up, and also doesn’t have any real performance cost when the system is already prepared.
-
-
  */
 import SwiftUI
 
@@ -22,7 +20,7 @@ struct CardView: View {
     @State private var offset = CGSize.zero
     @State private var feedback = UINotificationFeedbackGenerator() // if add this to content view, there's not time to call prepare()
     @Environment(\.accessibilityDifferentiateWithoutColor) var differentiateWithoutColor
-
+    @Environment(\.accessibilityVoiceOverEnabled) var voiceOverEnabled
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 25, style: .continuous)
@@ -41,14 +39,20 @@ struct CardView: View {
                 .shadow(radius: 10)
 
             VStack {
-                Text(card.promt)
-                    .font(.largeTitle)
-                    .foregroundColor(.black)
+                if voiceOverEnabled { //double tap to reach out the answer
+                    Text(isShowingAnswer ? card.answer : card.promt)
+                        .font(.largeTitle)
+                        .foregroundColor(.black)
+                } else {
+                    Text(card.promt)
+                        .font(.largeTitle)
+                        .foregroundColor(.black)
 
-                if isShowingAnswer {
-                    Text(card.answer)
-                        .font(.title)
-                        .foregroundColor(.gray)
+                    if isShowingAnswer {
+                        Text(card.answer)
+                            .font(.title)
+                            .foregroundColor(.gray)
+                    }
                 }
             }
             .padding(20)
@@ -58,6 +62,7 @@ struct CardView: View {
         .rotationEffect(.degrees(Double(offset.width) / 5)) //the order of rotation, offset matters
         .offset(x: offset.width * 5, y: 0)
         .opacity(2 - Double(abs(offset.width) / 50 )) // beyond 50 points we start to fade out the card, until at 100 points left or right the opacity is 0.
+        .accessibilityAddTraits(.isButton) // voice over: card is button
         .gesture(
             DragGesture()
                 .onChanged { gesture in
@@ -81,6 +86,7 @@ struct CardView: View {
         .onTapGesture {
             isShowingAnswer.toggle()
         }
+        .animation(.spring(), value: offset)
     }
 }
 

@@ -8,39 +8,70 @@
 import SwiftUI
 
 struct checkMarkCircleatBottomView: View {
+    var removeCard: () -> Void //callback for func removeCard(at index: Int)
     var body: some View {
         HStack {
-            Image(systemName: "xmark.circle")
-                .padding()
-                .background(.black.opacity(0.7))
-                .clipShape(Circle())
+            Button {
+                withAnimation {
+                    removeCard()
+                }
+            } label: {
+                Image(systemName: "xmark.circle")
+                    .padding()
+                    .background(.black.opacity(0.7))
+                    .clipShape(Circle())
+            }
+            .accessibilityLabel("Wrong")
+            .accessibilityHint("Mark your answer as being incorrect.")
+           
             Spacer()
-            Image(systemName: "checkmark.circle")
-                .padding()
-                .background(.black.opacity(0.7))
-                .clipShape(Circle())
+            
+            Button {
+                withAnimation {
+                    removeCard()
+                }
+            } label: {
+                Image(systemName: "checkmark.circle")
+                    .padding()
+                    .background(.black.opacity(0.7))
+                    .clipShape(Circle())
+            }
+            .accessibilityLabel("Correct")
+            .accessibilityHint("Mark your answer as being correct.")
         }
         .foregroundColor(.white)
         .font(.largeTitle)
         .padding()
     }
 }
+
+
+/*
+ Issues for voice over regarding gestures
+
+ We don’t say that the cards are buttons that can be tapped.
+ When the answer is revealed there is no audible notification of what it was.
+ Users have no way of swiping left or right to move through the cards.
+ 
+ */
 struct ContentView: View {
     @State private var cards = [Card](repeating: Card.example, count: 10)
     @State private var timeRemaining = 100
     @State private var isActive = true
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     @Environment(\.accessibilityDifferentiateWithoutColor) var differentiateWithoutColor
+    @Environment(\.accessibilityVoiceOverEnabled) var voiceOverEnabled
     @Environment(\.scenePhase) var scenePhase
+    
     var body: some View {
         ZStack {
-            Image("background")
+            Image(decorative: "background")
                 .resizable()
                 .ignoresSafeArea()
             VStack {
-                if differentiateWithoutColor {
+                if differentiateWithoutColor || voiceOverEnabled {
                     Spacer()
-                    checkMarkCircleatBottomView()
+                    checkMarkCircleatBottomView { removeCard(at: cards.count - 1) }
                 }
 
                 ZStack {
@@ -51,6 +82,8 @@ struct ContentView: View {
                             }
                         }
                         .stacked(at: index, in: cards.count)
+                        .allowsHitTesting(index == cards.count - 1) //only tap the top card
+                        .accessibilityHidden(index < cards.count - 1) // voice over ignore the other cards
                     }
                 }
                 .allowsHitTesting(timeRemaining > 0)
@@ -91,6 +124,7 @@ struct ContentView: View {
     }
 
     func removeCard(at index: Int) {
+        guard index >= 0 else { return }
         cards.remove(at: index)
         if cards.isEmpty {
             isActive = false
