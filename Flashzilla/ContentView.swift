@@ -5,6 +5,18 @@
 //  Created by July on 3/18/22.
 //
 
+/*
+ Day 91: Challenge
+ One of the best ways to learn is to write your own code as often as possible, so here are some ways you should try extending this app to make sure you fully understand what’s going on.
+
+ When adding a card, the textfields keep their current text – fix that so that the textfields clear themselves after a card is added.
+ If you drag a card to the right but not far enough to remove it, then release, you see it turn red as it slides back to the center. Why does this happen and how can you fix it? (Tip: think about the way we set offset back to 0 immediately, even though the card hasn’t animated yet. You might solve this with a ternary within a ternary, but a custom modifier will be cleaner.)
+ For a harder challenge: when the users gets an answer wrong, add that card goes back into the array so the user can try it again. Doing this successfully means rethinking the ForEach loop, because relying on simple integers isn’t enough – your cards need to be uniquely identifiable.
+ Still thirsty for more? Try upgrading our loading and saving code in two ways:
+
+ Make it use documents JSON rather than UserDefaults – this is generally a good idea, so you should get practice with this.
+ Try to find a way to centralize the loading and saving code for the cards. You might need to experiment a little to find something you like!
+ */
 import SwiftUI
 
 struct checkMarkCircleatBottomView: View {
